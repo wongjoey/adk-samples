@@ -1,0 +1,66 @@
+openapi: 3.0.0
+info:
+  title: ServiceNow API
+  version: v1
+  contact:
+    email: joeywong@google.com 
+  description: |
+    Basic OpenAPI specification for the ServiceNow API.
+servers:
+  - url: https://dev000000.service-now.com/api/now
+    description: ServiceNow instance URL (replace 'your_instance')
+security:
+  - oAuth2: []
+tags:
+  - name: User
+    description: User-related operations
+components:
+  securitySchemes:
+    # basicAuth:
+    #   type: http
+    #   scheme: basic
+    oAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://dev000000.service-now.com/oauth_auth.do
+          tokenUrl: https://dev000000.service-now.com/oauth_token.do
+          scopes:
+            useraccount: useraccount
+  responses:
+    success:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                type: array
+                items:
+                  type: object
+    recordNotFound:
+      description: Record not found
+    badRequest:
+      description: Invalid request
+    unauthorized:
+      description: Unauthorized
+paths:
+  /ui/user/current_user:
+    get:
+      summary: Retrieve the current logged in user info
+      description: Retrieve the current logged in user info
+      operationId: getCurrentUser
+      tags:
+        - User
+      security:
+        - oAuth2: []
+      responses:
+        '200':
+          $ref: '#/components/responses/success'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/recordNotFound'
