@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 
 from google.adk.auth import AuthCredential, AuthCredentialTypes, OAuth2Auth
 
@@ -10,13 +11,15 @@ from fastapi.openapi.models import OAuth2
 from fastapi.openapi.models import OAuthFlowAuthorizationCode
 from fastapi.openapi.models import OAuthFlows
 
+load_dotenv()
+
 with open(os.path.join(os.path.dirname(__file__), 'snow_spec_v2.yaml'), 'r') as f:
     content = f.read()
 
-PROJECT_ID="CHANGE_ME"
-SNOW_INSTANCE_NAME="CHANGE_ME"
-SNOW_OAUTH_SCOPES="useraccount"
-REDIRECT_URI="http://localhost:8000/dev-ui"
+PROJECT_ID=os.getenv("PROJECT_ID")
+SNOW_INSTANCE_NAME=os.getenv("SNOW_INSTANCE_NAME")
+SNOW_OAUTH_SCOPES=os.getenv("SNOW_OAUTH_SCOPES")
+REDIRECT_URI=os.getenv("REDIRECT_URI")
 SNOW_CLIENT_ID=f"projects/{PROJECT_ID}/secrets/adk-snow-client-id/versions/latest"
 SNOW_CLIENT_SECRET=f"projects/{PROJECT_ID}/secrets/adk-snow-client-secret/versions/latest"
 
@@ -31,7 +34,7 @@ auth_scheme = OAuth2(
             authorizationUrl=f"https://{SNOW_INSTANCE_NAME}.service-now.com/oauth_auth.do",
             tokenUrl=f"https://{SNOW_INSTANCE_NAME}.service-now.com/oauth_token.do",
             scopes={
-                f"{SNOW_OAUTH_SCOPES}" : "useraccount",
+                f"{SNOW_OAUTH_SCOPES}" : "default",
             }
       )
    )
@@ -42,7 +45,7 @@ auth_credential = AuthCredential(
   oauth2=OAuth2Auth(
     client_id=snow_client_id,
     client_secret=snow_client_secret,
-    redirect_uri=f"{REDIRECT_URI}" # This is the ADK Web UI
+    redirect_uri=REDIRECT_URI # This is the ADK Web UI
   )
 )
 

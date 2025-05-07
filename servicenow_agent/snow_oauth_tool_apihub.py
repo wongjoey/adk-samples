@@ -1,3 +1,6 @@
+import os
+from dotenv import load_dotenv
+
 from google.adk.auth import AuthCredential, AuthCredentialTypes, OAuth2Auth
 
 from google.adk.tools.apihub_tool.apihub_toolset import APIHubToolset
@@ -7,12 +10,14 @@ from fastapi.openapi.models import OAuth2
 from fastapi.openapi.models import OAuthFlowAuthorizationCode
 from fastapi.openapi.models import OAuthFlows
 
-PROJECT_ID="CHANGE_ME"
-APIHUB_LOCATION="CHANGE_ME"
-SNOW_INSTANCE_NAME="CHANGE_ME"
-SNOW_OAUTH_SCOPES="useraccount"
-REDIRECT_URI="http://localhost:8000/dev-ui"
-API_HUB_LOCATION=f"projects/{PROJECT_ID}/locations/{APIHUB_LOCATION}/apis"
+load_dotenv()
+
+PROJECT_ID=os.getenv("PROJECT_ID")
+APIHUB_REGION=os.getenv("APIHUB_REGION")
+SNOW_INSTANCE_NAME=os.getenv("SNOW_INSTANCE_NAME")
+SNOW_OAUTH_SCOPES=os.getenv("SNOW_OAUTH_SCOPES")
+REDIRECT_URI=os.getenv("REDIRECT_URI")
+API_HUB_LOCATION=f"projects/{PROJECT_ID}/locations/{APIHUB_REGION}/apis"
 SNOW_CLIENT_ID=f"projects/{PROJECT_ID}/secrets/adk-snow-client-id/versions/latest"
 SNOW_CLIENT_SECRET=f"projects/{PROJECT_ID}/secrets/adk-snow-client-secret/versions/latest"
 

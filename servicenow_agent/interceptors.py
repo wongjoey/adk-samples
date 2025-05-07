@@ -104,10 +104,11 @@ def _extract_oauth_tokens_from_state(tool: BaseTool, tool_context: ToolContext) 
             logger.info(f"Raw credential data found for key '{credential_key}': {repr(credential_data)}")
 
             logger.info(f"Found credential data using key '{credential_key}': {credential_data}")
-            if (credential_data and credential_data.oauth2 and credential_data.oauth2.token
-                    and isinstance(credential_data.oauth2.token, dict)):
-                access_token = credential_data.oauth2.token.get('access_token')
-                refresh_token = credential_data.oauth2.token.get('refresh_token')
+            # Corrected: Access tokens directly from the oauth2 attribute (OAuth2Auth object)
+            if (credential_data and hasattr(credential_data, 'oauth2') and credential_data.oauth2 and
+                    hasattr(credential_data.oauth2, 'access_token')): # Check if oauth2 and access_token exist
+                access_token = credential_data.oauth2.access_token
+                refresh_token = getattr(credential_data.oauth2, 'refresh_token', None) # Use getattr for optional refresh_token
                 logger.info(f"Extracted tokens: Access token {'found' if access_token else 'not found'}, Refresh token {'found' if refresh_token else 'not found'}")
     except Exception as e:
         logger.error(f"Error extracting tokens for tool '{tool.name}': {e}")

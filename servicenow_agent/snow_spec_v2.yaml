@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: ServiceNow API
-  version: v1
+  version: v2
   contact:
     email: joeywong@google.com 
   description: |
@@ -16,9 +16,6 @@ tags:
     description: User-related operations
 components:
   securitySchemes:
-    # basicAuth:
-    #   type: http
-    #   scheme: basic
     oAuth2:
       type: oauth2
       flows:

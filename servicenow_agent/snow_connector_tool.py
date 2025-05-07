@@ -1,11 +1,20 @@
+import os
+from dotenv import load_dotenv
 from google.adk.tools.application_integration_tool.application_integration_toolset import ApplicationIntegrationToolset
 
+load_dotenv()
+
+PROJECT_ID=os.getenv("PROJECT_ID")
+SNOW_CONNECTION_REGION=os.getenv("SNOW_CONNECTION_REGION")
+SNOW_CONNECTION_NAME=os.getenv("SNOW_CONNECTION_NAME")
+
+
 snow_connector_tool = ApplicationIntegrationToolset(
-    project="CHANGE_ME", 
-    location="CHANGE_ME", 
-    connection="CHANGE_ME",
+    project=PROJECT_ID, 
+    location=SNOW_CONNECTION_REGION, 
+    connection=SNOW_CONNECTION_NAME,
     entity_operations={
-        "Problem": ["GET", "LIST"],
+        "Problem": ["GET", "LIST", "CREATE"],
         "Incident": ["GET", "LIST"],
     },
     # actions=["ExecuteCustomQuery"],
