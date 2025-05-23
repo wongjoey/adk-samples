@@ -1,24 +1,32 @@
 import os
 from dotenv import load_dotenv
 from google.adk.tools.application_integration_tool.application_integration_toolset import ApplicationIntegrationToolset
+from google.adk.tools.apihub_tool.clients.secret_client import SecretManagerClient
+from google.adk.auth import AuthCredential, AuthCredentialTypes, OAuth2Auth
+
+from fastapi.openapi.models import OAuth2
+from fastapi.openapi.models import OAuthFlowAuthorizationCode
+from fastapi.openapi.models import OAuthFlows
+
 
 load_dotenv()
 
-PROJECT_ID=os.getenv("PROJECT_ID")
+SNOW_CONNECTION_PROJECT_ID=os.getenv("SNOW_CONNECTION_PROJECT_ID")
 SNOW_CONNECTION_REGION=os.getenv("SNOW_CONNECTION_REGION")
 SNOW_CONNECTION_NAME=os.getenv("SNOW_CONNECTION_NAME")
+SNOW_INSTANCE_NAME=os.getenv("SNOW_INSTANCE_NAME")
+SNOW_OAUTH_SCOPES=os.getenv("SNOW_OAUTH_SCOPES")
+SNOW_CLIENT_ID=f"projects/{SNOW_CONNECTION_PROJECT_ID}/secrets/adk-snow-client-id/versions/latest"
+SNOW_CLIENT_SECRET=f"projects/{SNOW_CONNECTION_PROJECT_ID}/secrets/adk-snow-client-secret/versions/2"
 
+AGENT_REDIRECT_URI=os.getenv("AGENT_REDIRECT_URI")
 
-snow_connector_tool = ApplicationIntegrationToolset(
-    project=PROJECT_ID, 
-    location=SNOW_CONNECTION_REGION, 
-    connection=SNOW_CONNECTION_NAME,
-    entity_operations={
-        "Problem": ["GET", "LIST", "CREATE"],
-        "Incident": ["GET", "LIST"],
-    },
-    tool_name="snow_connector_tool",
-    tool_instructions="""
+# Get the credentials for the ServiceNow APIs
+secret_manager_client = SecretManagerClient()
+snow_client_id = secret_manager_client.get_secret(SNOW_CLIENT_ID)
+snow_client_secret = secret_manager_client.get_secret(SNOW_CLIENT_SECRET)
+
+TOOL_INSTR="""
         **Tool Definition: ServiceNow Connector via Apigee Integration**
 
         This tool interacts with ServiceNow entities (Problems, Incidents) using an Apigee Integration Connector.
@@ -35,7 +43,7 @@ snow_connector_tool = ApplicationIntegrationToolset(
         *   **Tool Naming Convention:** Tool functions follow the pattern: `snow_connector_tool_<operation>_<entity_name_singular>`.
             *   Example: `snow_connector_tool_get_problem`, `snow_connector_tool_list_incident`.
         *   **Supported Entity Operations:**
-            *   `Problem`: GET, LIST, CREATE
+            *   `Problem`: GET, LIST
             *   `Incident`: GET, LIST
 
         **Data Retrieval (GET and LIST Operations):**
@@ -66,5 +74,40 @@ snow_connector_tool = ApplicationIntegrationToolset(
             1.  After the problem is successfully created by `snow_connector_tool_create_problem` (which will return the new record including its `sys_id`).
             2.  Immediately call `snow_connector_tool_get_problem` using the `sys_id` of the newly created problem to fetch its complete and up-to-date details.
             3.  Present the **Problem Number** (e.g., "PRB0040001") and other key details (like description, state, priority) to the user. Do **NOT** show the `sys_id` as the primary identifier to the user.
-    """
+"""
+
+oauth2_scheme = OAuth2(
+   flows=OAuthFlows(
+      authorizationCode=OAuthFlowAuthorizationCode(
+            authorizationUrl=f"https://{SNOW_INSTANCE_NAME}.service-now.com/oauth_auth.do",
+            tokenUrl=f"https://{SNOW_INSTANCE_NAME}.service-now.com/oauth_token.do",
+            scopes={
+                f"{SNOW_OAUTH_SCOPES}" : "default",
+            }
+      )
+   )
+)
+
+oauth2_credential = AuthCredential(
+  auth_type=AuthCredentialTypes.OAUTH2,
+  oauth2=OAuth2Auth(
+    client_id=snow_client_id,
+    client_secret=snow_client_secret,
+    redirect_uri=AGENT_REDIRECT_URI # This is the ADK Web UI
+  )
+)
+
+
+snow_connector_tool = ApplicationIntegrationToolset(
+    project=SNOW_CONNECTION_PROJECT_ID, 
+    location=SNOW_CONNECTION_REGION, 
+    connection=SNOW_CONNECTION_NAME,
+    entity_operations={
+        "Problem": ["GET", "LIST", "CREATE"],
+        "Incident": ["GET", "LIST"],
+    },
+    tool_name_prefix="snow_connector_tool",
+    tool_instructions=TOOL_INSTR,
+    auth_credential=oauth2_credential,
+    auth_scheme=oauth2_scheme,
 )
